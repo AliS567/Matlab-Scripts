@@ -1,0 +1,60 @@
+% Lets make a dataset balancer with inputs:
+% X being the data in the form (row, col) = (No. of sample, data point) 
+% Y being the Multiclass Labels in one hot form (row, col) = (No. of sample, classes)
+
+function [BalancedData, BalancedLabels] = Balancer(X,Y)
+    
+    % Sort all one hot rows and data
+    DiffRows = unique(Y, 'rows');
+    DiffRows = flip(DiffRows);
+    
+    fprintf(['\n Your dataset has ' num2str(size(DiffRows,1)) ' Classes \n'])
+    
+    SortedData = [];
+    SortedLabels = [];
+    
+    f = waitbar(0, 'Sorting your Data');
+    
+    for i = 1:size(DiffRows, 1)
+        waitbar(i/size(DiffRows, 1), f, sprintf('Sorting the Data: %d %%', floor(i/size(DiffRows, 1)*100)));
+        for j = 1:size(Y,1)
+            if Y(j,:) == DiffRows(i,:)
+                SortedData = [SortedData; X(j,:)];
+                SortedLabels = [SortedLabels; Y(j,:)];
+            end   
+        end
+    end
+    
+    % Find lowest representation in classes
+    [Instances, class] = min(sum(Y));
+    
+    fprintf(['\n Class ' num2str(class) ' has the lowest representation \n'])
+    fprintf([' With only: ' num2str(Instances) ' instances \n'])
+    
+    % Find Rows where lowest class is prevelant, and find indices
+    [SortedDiffs, SortedIndices] = unique(SortedLabels, 'rows');
+    SortedDiffs = flip(SortedDiffs);
+    SortedIndices = flip(SortedIndices);
+    
+    BalancedData = [];
+    BalancedLabels = [];
+    
+    for i = 1:size(SortedIndices,1)
+        % Find random indices to select from data
+        if i ~= size(SortedIndices, 1)
+            randomNums = randi([SortedIndices(i) SortedIndices(i+1)-1],118,1);
+        else
+            randomNums = randi([SortedIndices(i) size(Y,1)],118,1);
+        end
+        
+        if i == class
+            BalancedData = [BalancedData; SortedData(SortedIndices(i):SortedIndices(i+1),:)];
+            BalancedLabels = [BalancedLabels; SortedLabels(SortedIndices(i):SortedIndices(i+1),:)];
+        else
+            BalancedData = [BalancedData; SortedData(randomNums,:)];
+            BalancedLabels = [BalancedLabels; SortedLabels(randomNums,:)];
+        end
+        
+    end
+    
+end
